@@ -15,6 +15,8 @@
  */
 package org.onebusaway.gtfs_realtime.visualizer;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,7 +34,7 @@ import com.google.inject.Module;
 
 public class VisualizerMain {
 
-  private static final String ARG_VEHICLE_POSITIONS_URL = "vehiclePositionsUrl";
+  private static final String ARG_GTFS_RT_LIST = "gtfsRtList";
 
   public static void main(String[] args) throws Exception {
     VisualizerMain m = new VisualizerMain();
@@ -58,8 +60,15 @@ public class VisualizerMain {
     injector.injectMembers(this);
 
     VisualizerService service = injector.getInstance(VisualizerService.class);
-    service.setVehiclePositionsUrl(new URL(
-        cli.getOptionValue(ARG_VEHICLE_POSITIONS_URL)));
+    
+    BufferedReader in = new BufferedReader(new FileReader(cli.getOptionValue(ARG_GTFS_RT_LIST)));
+    while (in.ready()) {
+      String s = in.readLine();
+      System.out.println(s);
+      service.addVehiclePositionsUrl(new URL(s));
+    }
+    in.close();
+    
     injector.getInstance(VisualizerServer.class);
 
     LifecycleService lifecycleService = injector.getInstance(LifecycleService.class);
@@ -71,7 +80,7 @@ public class VisualizerMain {
   }
 
   private void buildOptions(Options options) {
-    options.addOption(ARG_VEHICLE_POSITIONS_URL, true, "");
+    options.addOption(ARG_GTFS_RT_LIST, true, "");
   }
 
 }
