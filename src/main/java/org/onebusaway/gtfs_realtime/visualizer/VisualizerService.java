@@ -55,6 +55,8 @@ public class VisualizerService {
 
   private int _refreshInterval = 20;
 
+  private int _minimumInterval = 10;
+
   private boolean _dynamicRefreshInterval = true;
 
   private long _mostRecentRefresh = -1;
@@ -80,6 +82,18 @@ public class VisualizerService {
 
   public void removeListener(VehicleListener listener) {
     _listeners.remove(listener);
+  }
+  
+  public void setRefreshInterval(int erval) {
+    _refreshInterval = erval;
+  }
+  
+  public void setMinimumInterval(int erval) {
+    _minimumInterval = erval;
+  }
+  
+  public void setDynamicRefresh(boolean dynamic) {
+    _dynamicRefreshInterval = dynamic;
   }
 
   private void refresh() throws IOException {
@@ -139,7 +153,7 @@ public class VisualizerService {
     long t = System.currentTimeMillis();
     if (_mostRecentRefresh != -1) {
       int refreshInterval = (int) ((t - _mostRecentRefresh) / (2 * 1000));
-      _refreshInterval = Math.max(10, refreshInterval);
+      _refreshInterval = Math.max(_minimumInterval, refreshInterval);
       _log.info("refresh interval: " + _refreshInterval);
     }
     _mostRecentRefresh = t;
