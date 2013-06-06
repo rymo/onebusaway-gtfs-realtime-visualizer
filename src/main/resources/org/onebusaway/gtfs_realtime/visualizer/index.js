@@ -34,7 +34,7 @@ function Init() {
 		} ];
 		var map_canvas = document.getElementById("map_canvas");
 		var myOptions = {
-			center : new google.maps.LatLng(42.349, -71.059),
+			center : new google.maps.LatLng(39.085, -94.585),
 			zoom : 8,
 			styles : map_style,
 			mapTypeId : google.maps.MapTypeId.ROADMAP
