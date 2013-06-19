@@ -7,7 +7,7 @@
     <version>1.1.7</version>
   </parent>
   <artifactId>onebusaway-gtfs-realtime-visualizer</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.2</version>
   <name>onebusaway-gtfs-realtime-visualizer</name>
   <description>A visualizer for GTFS-realtime transit data.</description>
     <url>https://github.com/OneBusAway/onebusaway-gtfs-realtime-visualizer/wiki/</url>

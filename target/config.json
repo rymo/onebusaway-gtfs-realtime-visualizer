@@ -1,0 +1,19 @@
+{
+	"dynamicRefresh": true,
+	"minRefresh": 10,
+	"httpPort": 8080,
+	"gtfsRtSources": [
+		{
+			"agency":"KCATA",
+			"url":"http://look.itsab.us/GTFS-Realtime/",
+			"refreshRate":30,
+			"hue": 0.62
+		},
+		{
+			"agency":"MBTA",
+			"url":"http://developer.mbta.com/lib/gtrtfs/Vehicles.pb",
+			"refreshRate":5,
+			"hue": 0.25
+		}		
+	]
+}

@@ -19,9 +19,9 @@ function Init() {
   var hostandport = window.location.hostname + ':' + window.location.port;
 
 	/**
-	 * Create a custom-styled Googe Map with no labels and custom color scheme.
+	 * Create a custom-styled Google Map with no labels and custom color scheme.
 	 */
-	var CreateMap = function() {
+	function CreateMap() {
 		var map_style = [ {
 			elementType : "labels",
 			stylers : [ {
@@ -48,7 +48,7 @@ function Init() {
 	 * We want to assign a random color to each bus in our visualization. We
 	 * pick from the HSV color-space since it gives more natural colors.
 	 */
-	var HsvToRgb = function(h, s, v) {
+	function HsvToRgb(h, s, v) {
 		h_int = parseInt(h * 6);
 		f = h * 6 - h_int;
 		var a = v * (1 - s);
@@ -70,7 +70,7 @@ function Init() {
 		}
 	};
 
-	var HsvToRgbString = function(h, s, v) {
+	function HsvToRgbString(h, s, v) {
 		var rgb = HsvToRgb(h, s, v);
 		for ( var i = 0; i < rgb.length; ++i) {
 			rgb[i] = parseInt(rgb[i] * 256)
@@ -81,16 +81,41 @@ function Init() {
 	var h = Math.random();
 	var golden_ratio_conjugate = 0.618033988749895;
 
-	var NextRandomColor = function() {
+	function NextRandomColor() {
 		h = (h + golden_ratio_conjugate) % 1;
 		return HsvToRgbString(h, 0.90, 0.90)
 	};
+	
+	function ValueFromHash(str){
+		var hash = 0;
+		var hashVal = 0;
+		if (str.length == 0) return hash;
+		for (i = 0; i < str.length; i++) {
+			char = str.charCodeAt(i);
+			hash = ((hash<<5)-hash)+char;
+			hashVal = ((hash & hash) % 256)/256;
+		}
+		return hashVal;
+	}
+	
+	function AgencyIdColor(v_data) {
+		var agency = v_data.agency;
+		var id = v_data.id;
+		var hue = v_data.hue;
+		var rgbString;
+		if(hue != null){
+			rgbString = HsvToRgbString(hue+0.07*(Math.sin(Math.PI*ValueFromHash(id))-0.5), 1-(0.5*ValueFromHash(id)), Math.cos(ValueFromHash(id)*Math.PI/3)+0.4);
+		}else{
+			rgbString = HsvToRgbString(ValueFromHash(agency)+0.07*(Math.sin(Math.PI*ValueFromHash(id))-0.5), 1-(0.5*ValueFromHash(id)), Math.cos(ValueFromHash(id)*Math.PI/3)+0.4);
+		}
+		return rgbString;
+	}
 
 	var icon = new google.maps.MarkerImage(
 			'http://' + hostandport + '/WhiteCircle8.png', null, null,
 			new google.maps.Point(4, 4));
 
-	var CreateVehicle = function(v_data) {
+	function CreateVehicle(v_data) {
 		var point = new google.maps.LatLng(v_data.lat, v_data.lon);
 		var path = new google.maps.MVCArray();
 		path.push(point);
@@ -107,12 +132,12 @@ function Init() {
 			editable : false,
 			map : map,
 			path : path,
-			strokeColor : NextRandomColor(),
+			strokeColor : AgencyIdColor(v_data),
 			strokeOpacity : 0.8,
 			strokeWeight : 4
 		};
 		return {
-			id : v_data.id,
+			uid : v_data.uid,
 			marker : new google.maps.Marker(marker_opts),
 			polyline : new google.maps.Polyline(polyline_opts),
 			path : path,
@@ -130,15 +155,15 @@ function Init() {
 		};
 	};
 	
-	var vehicles_by_id = {};
-	var animation_steps = 20;
+	var vehicles_by_uid = {};
+	var animation_steps = 30;
 
 	function UpdateVehicle(v_data, updates) {
-		var id = v_data.id;
-		if (!(id in vehicles_by_id)) {
-			vehicles_by_id[id] = CreateVehicle(v_data);
+		var uid = v_data.uid;
+		if (!(uid in vehicles_by_uid)) {
+			vehicles_by_uid[uid] = CreateVehicle(v_data);
 		}
-		var vehicle = vehicles_by_id[id];
+		var vehicle = vehicles_by_uid[uid];
 		if (vehicle.lastUpdate >= v_data.lastUpdate) {
 			return;
 		}
@@ -163,7 +188,7 @@ function Init() {
 	
 	var first_update = true;
 	
-	var ProcessVehicleData = function(data) {
+	function ProcessVehicleData(data) {
 		var vehicles = jQuery.parseJSON(data);
 		var updates = [];
 		var bounds = new google.maps.LatLngBounds();
@@ -192,8 +217,7 @@ function Init() {
 	};
 
 	/**
-	 * We create a WebSocket to listen for vehilce position updates from our
-	 * webserver.
+	 * We create a WebSocket to listen for vehicle position updates from our webserver.
 	 */
 	if ("WebSocket" in window) {
 		var ws = new WebSocket("ws://" + hostandport + "/data.json");
@@ -208,6 +232,6 @@ function Init() {
 			console.log("WebSockets connection closed");
 		}
 	} else {
-		alert("No WebSockets support");
+		alert("Your browser does not offer WebSockets support. Please try another browser.");
 	}
 }

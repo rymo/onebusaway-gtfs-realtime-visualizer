@@ -1,17 +1,17 @@
 /**
  * Copyright (C) 2012 Google, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package org.onebusaway.gtfs_realtime.visualizer;
 
@@ -38,95 +38,98 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class DataServlet extends WebSocketServlet implements VehicleListener {
-
-  private static final long serialVersionUID = 1L;
-
-  private static final Logger _log = LoggerFactory.getLogger(DataServlet.class);
-
-  private VisualizerService _visualierService;
-
-  private Set<DataWebSocket> _sockets = new ConcurrentHashSet<DataWebSocket>();
-
-  private volatile String _vehicles;
-
-  @Inject
-  public void setVisualizerService(VisualizerService visualizerService) {
-    _visualierService = visualizerService;
-  }
-
-  @PostConstruct
-  public void start() {
-    _visualierService.addListener(this);
-  }
-
-  @PreDestroy
-  public void stop() {
-    _visualierService.removeListener(this);
-  }
-
-  @Override
-  public void handleVehicles(List<Vehicle> vehicles) {
-    _vehicles = getVehiclesAsString(vehicles);
-    for (DataWebSocket socket : _sockets) {
-      socket.sendVehicles();
-    }
-  }
-
-  @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-      throws ServletException, IOException {
-    resp.setContentType("application/json");
-    PrintWriter writer = resp.getWriter();
-    writer.write(_vehicles);
-  }
-
-  @Override
-  public WebSocket doWebSocketConnect(HttpServletRequest request,
-      String protocol) {
-    return new DataWebSocket();
-  }
-
-  private String getVehiclesAsString(List<Vehicle> vehicles) {
-    try {
-      JSONArray array = new JSONArray();
-      for (Vehicle vehicle : vehicles) {
-        JSONObject obj = new JSONObject();
-        obj.put("id", vehicle.getId());
-        obj.put("lat", vehicle.getLat());
-        obj.put("lon", vehicle.getLon());
-        obj.put("lastUpdate", vehicle.getLastUpdate());
-        array.put(obj);
-      }
-      return array.toString();
-    } catch (JSONException ex) {
-      throw new IllegalStateException(ex);
-    }
-  }
-
-  class DataWebSocket implements WebSocket {
-
-    private Connection _connection;
-
-    @Override
-    public void onOpen(Connection connection) {
-      _connection = connection;
-      _sockets.add(this);
-
-      sendVehicles();
-    }
-
-    @Override
-    public void onClose(int closeCode, String message) {
-      _sockets.remove(this);
-    }
-
-    public void sendVehicles() {
-      try {
-        _connection.sendMessage(_vehicles);
-      } catch (IOException ex) {
-        _log.warn("error sending WebSocket message", ex);
-      }
-    }
-  }
+public class DataServlet extends WebSocketServlet implements VehicleListener{
+	
+	private static final long serialVersionUID = 1L;
+	
+	private static final Logger _log = LoggerFactory.getLogger(DataServlet.class);
+	
+	private VisualizerService _visualizerService;
+	
+	private Set<DataWebSocket> _sockets = new ConcurrentHashSet<DataWebSocket>();
+	
+	private volatile String _vehicles;
+	
+	@Inject
+	public void setVisualizerService(VisualizerService visualizerService) {
+		_visualizerService = visualizerService;
+	}
+	
+	@PostConstruct
+	public void start() {
+		_visualizerService.addListener(this);
+	}
+	
+	@PreDestroy
+	public void stop() {
+		_visualizerService.removeListener(this);
+	}
+	
+	@Override
+	public void handleVehicles(List<GTFSRTSource> sources) {
+		_vehicles = getVehiclesAsString(sources);
+		for (DataWebSocket socket : _sockets) {
+			socket.sendVehicles();
+		}
+	}
+	
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		resp.setContentType("application/json");
+		PrintWriter writer = resp.getWriter();
+		writer.write(_vehicles);
+	}
+	
+	@Override
+	public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
+		return new DataWebSocket();
+	}
+	
+	private String getVehiclesAsString(List<GTFSRTSource> sources) {
+		try {
+			JSONArray array = new JSONArray();
+			for (GTFSRTSource source : sources) {
+				for (Vehicle vehicle : source.getVehicles()) {
+					JSONObject obj = new JSONObject();
+					obj.put("uid", source.getAgency() + "~" + vehicle.getId());
+					obj.put("agency", source.getAgency());
+					obj.put("hue", source.getHue());
+					obj.put("id", vehicle.getId());
+					obj.put("lat", vehicle.getLat());
+					obj.put("lon", vehicle.getLon());
+					obj.put("lastUpdate", vehicle.getLastUpdate());
+					array.put(obj);
+				}
+			}
+			return array.toString();
+		} catch (JSONException ex) {
+			throw new IllegalStateException(ex);
+		}
+	}
+	
+	class DataWebSocket implements WebSocket{
+		
+		private Connection _connection;
+		
+		@Override
+		public void onOpen(Connection connection) {
+			_connection = connection;
+			_sockets.add(this);
+			
+			sendVehicles();
+		}
+		
+		@Override
+		public void onClose(int closeCode, String message) {
+			_sockets.remove(this);
+		}
+		
+		public void sendVehicles() {
+			try {
+				_connection.sendMessage(_vehicles);
+			} catch (IOException ex) {
+				_log.warn("error sending WebSocket message", ex);
+			}
+		}
+	}
 }
