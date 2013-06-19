@@ -3,7 +3,5 @@ pom.xml.releaseBackup
 .settings
 .project
 .classpath
-/target
-target
+/target/*
 !/target/config.json
-!target/config.json

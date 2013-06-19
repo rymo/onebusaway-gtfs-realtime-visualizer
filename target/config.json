@@ -10,9 +10,15 @@
 			"hue": 0.62
 		},
 		{
+			"agency":"IndeBus",
+			"url":"http://look.itsab.us/GTFS-Realtime/transloc.php",
+                        "refreshRate":5,
+                        "hue": 0.01
+                },
+		{
 			"agency":"MBTA",
 			"url":"http://developer.mbta.com/lib/gtrtfs/Vehicles.pb",
-			"refreshRate":5,
+			"refreshRate":30,
 			"hue": 0.25
 		}		
 	]
