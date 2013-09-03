@@ -125,7 +125,7 @@ function Init() {
 			flat : false,
 			icon : icon,
 			map : map,
-			position : point,
+			position : point
 		};
 		var polyline_opts = {
 			clickable : false,
